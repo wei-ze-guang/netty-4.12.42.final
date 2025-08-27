@@ -1,0 +1,19 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                %highlight([%d{HH:mm:ss.SSS}] [%thread] %-5level %logger{36} - [%method] [%line] %msg%n)
+            </pattern>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+    <logger name="io.netty" level="DEBUG"/>
+
+
+    <!-- 类的全路径是 org.springframework.beans.factory.support.DefaultSingletonBeanRegistry -->
+    <logger name="org.springframework.beans.factory.support.DefaultSingletonBeanRegistry" level="info" additivity="false">
+        <appender-ref ref="STDOUT" /> <!-- 指定输出到哪个 appender（如控制台） -->
+    </logger>
+</configuration>
