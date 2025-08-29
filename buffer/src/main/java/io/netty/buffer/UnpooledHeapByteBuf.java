@@ -17,6 +17,7 @@ package io.netty.buffer;
 
 import io.netty.util.internal.EmptyArrays;
 import io.netty.util.internal.PlatformDependent;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +36,7 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
  * {@link UnpooledByteBufAllocator#heapBuffer(int, int)}, {@link Unpooled#buffer(int)} and
  * {@link Unpooled#wrappedBuffer(byte[])} instead of calling the constructor explicitly.
  */
+@Slf4j
 public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
 
     private final ByteBufAllocator alloc;
@@ -543,7 +545,10 @@ public class UnpooledHeapByteBuf extends AbstractReferenceCountedByteBuf {
 
     @Override
     protected void deallocate() {
-        freeArray(array);
+        // 这个 ByteBuf 是堆内存类型，为了在 Java 里高效操作字节数据，底层直接用 byte[] 保存。
+        log.info("这里是Unpool 非池化的释放内存");
+        freeArray(array);  //  里面啥也不做
+        // 置为安全值 → 指向全局共享空数组而不是 null
         array = EmptyArrays.EMPTY_BYTES;
     }
 

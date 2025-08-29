@@ -44,20 +44,21 @@ public class NettyClient {
                                     ctx.close();
                                 }
                             });
+
                         }
                     });
 
             ChannelFuture f = b.connect(host, port).sync();
             f.channel().writeAndFlush("Hello from client!\n");
-            while (true){
-                try {
-                    Thread.sleep(800);
-                    f.channel().writeAndFlush("Hello from client!\n");
-                }catch (InterruptedException e){
-                    throw new RuntimeException(e);
-                }
-            }
-            //f.channel().closeFuture().sync();
+//            while (true){
+//                try {
+//                    Thread.sleep(8000);
+//                    f.channel().writeAndFlush("Hello from client!\n");
+//                }catch (InterruptedException e){
+//                    throw new RuntimeException(e);
+//                }
+//            }
+            f.channel().closeFuture().sync();
         } finally {
             group.shutdownGracefully();
         }

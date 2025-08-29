@@ -135,7 +135,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
 
     @Override
     protected EventLoop newChild(Executor executor, Object... args) throws Exception {
-        log.info("一个EventLoop被new，这个EventLoop被new的话是需要他的parent 还有 一个 selector的provider ，线程池，拒绝策略 等");
+        log.debug("一个EventLoop被new，这个EventLoop被new的话是需要他的parent 还有 一个 selector的provider ，线程池，拒绝策略 等");
         EventLoopTaskQueueFactory queueFactory = args.length == 4 ? (EventLoopTaskQueueFactory) args[3] : null;
         return new NioEventLoop(this, executor, (SelectorProvider) args[0],
             ((SelectStrategyFactory) args[1]).newSelectStrategy(), (RejectedExecutionHandler) args[2], queueFactory);

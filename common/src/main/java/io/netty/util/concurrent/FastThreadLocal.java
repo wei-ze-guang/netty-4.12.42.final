@@ -17,6 +17,7 @@ package io.netty.util.concurrent;
 
 import io.netty.util.internal.InternalThreadLocalMap;
 import io.netty.util.internal.PlatformDependent;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -41,6 +42,7 @@ import java.util.Set;
  * @param <V> the type of the thread-local variable
  * @see ThreadLocal
  */
+@Slf4j
 public class FastThreadLocal<V> {
 
     private static final int variablesToRemoveIndex = InternalThreadLocalMap.nextVariableIndex();
@@ -133,6 +135,7 @@ public class FastThreadLocal<V> {
      */
     @SuppressWarnings("unchecked")
     public final V get() {
+        log.info("优先从FastThreadLocal 线程内获取byteBuf");
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.get();
         Object v = threadLocalMap.indexedVariable(index);
         if (v != InternalThreadLocalMap.UNSET) {

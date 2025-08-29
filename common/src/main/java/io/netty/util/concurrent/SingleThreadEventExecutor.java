@@ -311,19 +311,19 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     private boolean fetchFromScheduledTaskQueue() {
-        log.info("[检查定时任务");
+        //log.info("[检查定时任务");
         if (scheduledTaskQueue == null || scheduledTaskQueue.isEmpty()) {
-            log.debug("[定时任务队列 scheduledTaskQueue 为空，返回true]");
+           // log.debug("[定时任务队列 scheduledTaskQueue 为空，返回true]");
             return true;
         }
         long nanoTime = AbstractScheduledEventExecutor.nanoTime();
         for (;;) {
             Runnable scheduledTask = pollScheduledTask(nanoTime);
             if (scheduledTask == null) {
-                log.debug("[定时任务队列不为空但是没有到期的任务，返回true]");
+                //log.debug("[定时任务队列不为空但是没有到期的任务，返回true]");
                 return true;
             }
-            log.info("定时任何不为空而且有到期任务，把任务放进普通任务，如果普通任务满了，放回定时任务队列，下次在处理");
+            //log.info("定时任何不为空而且有到期任务，把任务放进普通任务，如果普通任务满了，放回定时任务队列，下次在处理");
             if (!taskQueue.offer(scheduledTask)) {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
                 scheduledTaskQueue.add((ScheduledFutureTask<?>) scheduledTask);
@@ -393,7 +393,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (isShutdown()) {
             reject();
         }
-        log.info("[往taskQueue里面加入一个任务]");
+        log.debug("[往taskQueue里面加入一个任务]");
         return taskQueue.offer(task);
     }
 
@@ -1053,7 +1053,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 boolean success = false;
                 updateLastExecutionTime();
                 try {
-                    log.info("[run]，run方法准备执行");
+                    log.info("[run]，EventLoop的 run方法准备执行");
                     SingleThreadEventExecutor.this.run();
                     success = true;
                 } catch (Throwable t) {

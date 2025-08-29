@@ -22,6 +22,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.ReferenceCounted;
 import io.netty.util.internal.TypeParameterMatcher;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -49,6 +50,7 @@ import java.util.List;
  * {@link ReferenceCounted#release()} on decoded messages.
  *
  */
+@Slf4j
 public abstract class MessageToMessageDecoder<I> extends ChannelInboundHandlerAdapter {
 
     private final TypeParameterMatcher matcher;
@@ -81,12 +83,20 @@ public abstract class MessageToMessageDecoder<I> extends ChannelInboundHandlerAd
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         CodecOutputList out = CodecOutputList.newInstance();
         try {
+            /**
+             *     if (!(msg instanceof ByteBuf)) {
+             *         ctx.fireChannelRead(msg);
+             *         return;
+             *     }  就是如果不是字符串 就往下走，如果是字符换的话就 ctx.fireChannelRead(msg);
+             */
             if (acceptInboundMessage(msg)) {
                 @SuppressWarnings("unchecked")
                 I cast = (I) msg;
                 try {
+                    log.info("解码器就是一个handler，他把byteBuf转为字符串");
                     decode(ctx, cast, out);
                 } finally {
+                    //  最后还要释放这个byteBuf
                     ReferenceCountUtil.release(cast);
                 }
             } else {

@@ -20,6 +20,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.Set;
@@ -50,6 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @param <C>   A sub-type of {@link Channel}
  */
+@Slf4j
 @Sharable
 public abstract class ChannelInitializer<C extends Channel> extends ChannelInboundHandlerAdapter {
 
@@ -69,6 +71,8 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
      *                      the {@link Channel}.
      */
     protected abstract void initChannel(C ch) throws Exception;
+
+
 
     @Override
     @SuppressWarnings("unchecked")
@@ -104,6 +108,9 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
      */
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+
+        log.info("[这个方法在pipeline 增加一个channelHandler 的时候，这个 channelHandler 就会触发 ]");
+
         if (ctx.channel().isRegistered()) {
             // This should always be true with our current DefaultChannelPipeline implementation.
             // The good thing about calling initChannel(...) in handlerAdded(...) is that there will be no ordering
@@ -119,6 +126,7 @@ public abstract class ChannelInitializer<C extends Channel> extends ChannelInbou
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        log.debug("[这个方法在pipeline 移除一个channelHandler 的时候，这个 channelHandler 就会触发 ]");
         initMap.remove(ctx);
     }
 

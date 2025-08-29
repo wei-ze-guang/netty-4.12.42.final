@@ -21,10 +21,12 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import io.netty.util.IllegalReferenceCountException;
 import io.netty.util.ReferenceCounted;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Common logic for {@link ReferenceCounted} implementations
  */
+@Slf4j
 public abstract class ReferenceCountUpdater<T extends ReferenceCounted> {
     /*
      * Implementation notes:
@@ -118,11 +120,17 @@ public abstract class ReferenceCountUpdater<T extends ReferenceCounted> {
 
     // rawIncrement == increment << 1
     private T retain0(T instance, final int increment, final int rawIncrement) {
-        int oldRef = updater().getAndAdd(instance, rawIncrement);
+        log.info("byteBuf(hash={})的引用计数被增加({}个) ",instance.hashCode(), increment);
+        int oldRef = updater().getAndAdd(instance, rawIncrement);  //  原子性增加引用计数 使用cas
+        //检查 oldRef 是否非法：
+        //oldRef & 1 != 0：最低位为 1 → 对象已释放。
+        //oldRef != 2 && oldRef != 4：Netty 允许某些特殊初始值（2/4）用作内部标记。
+        //如果不满足条件，就抛出异常，防止对已释放对象再 retain()。
         if (oldRef != 2 && oldRef != 4 && (oldRef & 1) != 0) {
             throw new IllegalReferenceCountException(0, increment);
         }
         // don't pass 0!
+        // 防止 refCnt 超过 Integer.MAX_VALUE 或从负数变正数。
         if ((oldRef <= 0 && oldRef + rawIncrement >= 0)
                 || (oldRef >= 0 && oldRef + rawIncrement < oldRef)) {
             // overflow case

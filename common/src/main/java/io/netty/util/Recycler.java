@@ -20,6 +20,7 @@ import io.netty.util.concurrent.FastThreadLocal;
 import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
@@ -36,6 +37,7 @@ import static java.lang.Math.min;
  *
  * @param <T> the type of the pooled object
  */
+@Slf4j
 public abstract class Recycler<T> {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(Recycler.class);
@@ -163,6 +165,7 @@ public abstract class Recycler<T> {
             handle = stack.newHandle();
             handle.value = newObject(handle);
         }
+        log.info("netty的复用技术 复用一个Object = {} ", handle.value.getClass().getSimpleName());
         return (T) handle.value;
     }
 

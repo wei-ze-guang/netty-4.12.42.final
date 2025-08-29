@@ -85,13 +85,14 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     protected AbstractChannel(Channel parent, ChannelId id) {
         this.parent = parent;
         this.id = id;
+        log.debug("当一个channel被new时候 它内部会new一个unSafe 和他进行绑定");
         unsafe = newUnsafe();
         pipeline = newChannelPipeline();
     }
 
     @Override
     public final ChannelId id() {
-        log.info("[获取channelID={}]",id);
+//        log.debug("[获取channelID={}]",id);
         return id;
     }
 
@@ -107,6 +108,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      * Returns a new {@link DefaultChannelPipeline} instance.
      */
     protected DefaultChannelPipeline newChannelPipeline() {
+        log.info("当一个channel被new时候，这个channel 的构造函数里面会new 一个pipeline 和channel进行关联");
         return new DefaultChannelPipeline(this);
     }
 
@@ -283,6 +285,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     @Override
     public ChannelFuture write(Object msg) {
+        log.info("这里就是出发了channel的write，他会获取pipeline，然后从tail往回写，注意这里不是handler写这里是channel的write");
         return pipeline.write(msg);
     }
 

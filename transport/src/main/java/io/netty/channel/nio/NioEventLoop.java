@@ -705,6 +705,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             // to a spin loop readyOps == 0
             //Netty 的优化：某些 Selector（特别是 Linux epoll 或 JDK Selector bug）可能返回 0 → 也尝试 read
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
+                log.info("[这里底层就是把数据写入byteBuf]");
                 unsafe.read();
             }
         } catch (CancelledKeyException ignored) {
@@ -768,7 +769,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     @Override
     protected void wakeup(boolean inEventLoop) {
         if (!inEventLoop && wakenUp.compareAndSet(false, true)) {
-            log.info("[wakeup 唤醒一个selector]");
+            log.debug("[wakeup 唤醒一个selector]");
             selector.wakeup();
         }
     }
@@ -832,7 +833,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
 
                 int selectedKeys = selector.select(timeoutMillis);
-                log.info("[selector] 获取到状态发生变化的selectedKeys个数为{}",selectedKeys);
+                //log.info("[selector] 获取到状态发生变化的selectedKeys个数为{}",selectedKeys);
                 selectCnt ++;
 
                 if (selectedKeys != 0 || oldWakenUp || wakenUp.get() || hasTasks() || hasScheduledTasks()) {

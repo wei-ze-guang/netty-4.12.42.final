@@ -143,7 +143,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
     abstract boolean isDirect();
 
     PooledByteBuf<T> allocate(PoolThreadCache cache, int reqCapacity, int maxCapacity) {
-        PooledByteBuf<T> buf = newByteBuf(maxCapacity);
+        PooledByteBuf<T> buf = newByteBuf(maxCapacity); //这个newByteBuf有两种实现一种是heap堆内存 还要一种是堆外内存
         allocate(cache, buf, reqCapacity);
         return buf;
     }

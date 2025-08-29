@@ -114,17 +114,20 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
 
         private void handleReadException(ChannelPipeline pipeline, ByteBuf byteBuf, Throwable cause, boolean close,
                 RecvByteBufAllocator.Handle allocHandle) {
+            log.info("[read的时候这里捕获到了channelRead或者channelReadComplete 里面发生了异常，进行异常处理]");
             if (byteBuf != null) {
                 if (byteBuf.isReadable()) {
-                    readPending = false;
+                    //如果还有数据没处理完，就把它再 fireChannelRead 给 pipeline，让 handler 继续处理保证不会丢数据，即使发生了异常。
+                    readPending = false;  //标记当前读取事件已经处理完毕，防止重复触发。
                     pipeline.fireChannelRead(byteBuf);
                 } else {
+                    //ByteBuf 不可读：直接释放，避免内存泄漏
                     byteBuf.release();
                 }
             }
-            allocHandle.readComplete();
-            pipeline.fireChannelReadComplete();
-            pipeline.fireExceptionCaught(cause);
+            allocHandle.readComplete();  //告诉 RecvByteBufAllocator.Handle 本次读取已经完成。这用于自适应缓冲区管理，告诉 Netty 可以调整下一次读的缓冲区大小。
+            pipeline.fireChannelReadComplete();  //让 handler 有机会做批量处理或 flush（比如一次性 flush 多条消息，提高性能）。
+            pipeline.fireExceptionCaught(cause);  //将异常通知 pipeline 上的所有 handler 的 exceptionCaught() 方法。保证异常不被吞掉，并给上层业务逻辑处理机会。Netty 的设计里，异常是沿着 pipeline 从当前 handler 向后传播的
             if (close || cause instanceof IOException) {
                 closeOnRead(pipeline);
             }
@@ -150,6 +153,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
                 do {
                     byteBuf = allocHandle.allocate(allocator);
                     allocHandle.lastBytesRead(doReadBytes(byteBuf));
+                    log.info("从nio读取到的数据放进byteBuf中 这个byteBuf的hash是 {},可读字节数是{}",byteBuf.hashCode(),byteBuf.readableBytes());
                     if (allocHandle.lastBytesRead() <= 0) {
                         // nothing was read. release the buffer.
                         byteBuf.release();
@@ -164,18 +168,19 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
 
                     allocHandle.incMessagesRead(1);
                     readPending = false;
-                    log.info("[这里已经读取到 byteBuf的长度为{} 这里使用pipeline 准备使用 pipeline.fireChannelRead(byteBuf); ]",byteBuf.array().length);
                     pipeline.fireChannelRead(byteBuf);
                     byteBuf = null;
                 } while (allocHandle.continueReading());
 
                 allocHandle.readComplete();
+                log.info("[当 pipeline.fireChannelRead() 执行完后执行 pipeline的 fireChannelReadComplete方法]");
                 pipeline.fireChannelReadComplete();
 
                 if (close) {
                     closeOnRead(pipeline);
                 }
             } catch (Throwable t) {
+                log.info("如果调用read的pipeline的链方法中出现异常的话，进行异常处理");
                 handleReadException(pipeline, byteBuf, t, close, allocHandle);
             } finally {
                 // Check if there is a readPending which was not processed yet.
@@ -215,6 +220,7 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
     }
 
     private int doWriteInternal(ChannelOutboundBuffer in, Object msg) throws Exception {
+        log.info("这里是判断写入普通byteBuf还是 FileRegion 准备写入操作系统");
         if (msg instanceof ByteBuf) {
             ByteBuf buf = (ByteBuf) msg;
             if (!buf.isReadable()) {

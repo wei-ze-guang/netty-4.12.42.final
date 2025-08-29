@@ -84,7 +84,9 @@ public final class ReferenceCountUtil {
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
     public static boolean release(Object msg) {
+        // 加入是普通字符串根本不需要释放啊
         if (msg instanceof ReferenceCounted) {
+
             return ((ReferenceCounted) msg).release();
         }
         return false;

@@ -35,7 +35,8 @@ public class NettyServer {
                                 @Override
                                 protected void channelRead0(ChannelHandlerContext ctx, String msg) {
                                     System.out.println("Server received: " + msg);
-                                    // 传递给下一个 handler
+                                    // 传递给下一个 handler,这里为什么是channelRead0 是因为他是一个模板方法，他自己实现了channelRead
+                                    // 如果调用使用这个的话这里，这里执行完channelRead 他会自动释放byteBuf
                                     ctx.fireChannelRead(msg);
 //                                    ctx.writeAndFlush("Hello from server!\n");
                                 }
@@ -46,6 +47,9 @@ public class NettyServer {
                                     ctx.close();
                                 }
                             });
+                            for (int i = 0; i < 6; i++) {
+                                pipeline.addLast("handler-"+i,new MyServerHandler());
+                            }
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)

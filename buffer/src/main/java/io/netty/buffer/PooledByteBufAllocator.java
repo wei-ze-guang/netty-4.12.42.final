@@ -332,15 +332,54 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         return toLeakAwareBuffer(buf);
     }
 
+    /**
+     * newDirectBuffer(capacity)
+     *    │
+     *    ├─ 获取 PoolThreadCache
+     *    │    └─ directArena != null ?
+     *    │
+     *    ├─ YES → 从池化 arena 分配 (directArena.allocate)
+     *    │
+     *    └─ NO  → 非池化分配
+     *             ├─ hasUnsafe() ? UnsafeDirectByteBuf
+     *             └─ else        → UnpooledDirectByteBuf
+     *    │
+     *    └─ 包装成 LeakAwareBuffer
+     */
     @Override
     protected ByteBuf newDirectBuffer(int initialCapacity, int maxCapacity) {
         PoolThreadCache cache = threadCache.get();
+
         PoolArena<ByteBuffer> directArena = cache.directArena;
 
+        /**
+         * 1. directArena 是什么
+         * 在 Netty 的 PooledByteBufAllocator 里，内存管理被抽象为 Arena（竞技场）。
+         * Arena 就是一大块内存的管理器，它可以分配 / 回收小块的内存
+         * Netty 里面有两种 Arena：
+         * heapArena：管理 堆内存（byte[]）
+         * directArena：管理 直接内存（ByteBuffer.allocateDirect 出来的大内存块）
+         * 所以：
+         * 👉 directArena 就是用来管理 直接内存池 的 Arena。
+         */
         final ByteBuf buf;
         if (directArena != null) {
+            /**
+             * 如果这个线程有 directArena → 走内存池分配。
+             * directArena.allocate(...) 内部会：
+             * 查 PoolThreadCache 有没有满足条件的缓存块（tiny/ small / normal）。
+             * 有就直接拿，没有就从 arena 的 chunk list 里分配。
+             * 如果 chunk list 也不够 → 扩容，甚至走 allocateNormal 或 allocateHuge。
+             */
             buf = directArena.allocate(cache, initialCapacity, maxCapacity);
         } else {
+            /**
+             * 没有 arena 的情况：说明没走池化，退化为 非池化分配。
+             * 这里有两个分支：
+             * 如果 JVM 有 Unsafe → 用 UnsafeByteBufUtil 直接 new 一个 UnsafeDirectByteBuf。
+             * 如果没有 Unsafe → new 一个普通的 UnpooledDirectByteBuf。
+             * 这两者都是 直接 new 对象 + ByteBuffer.allocateDirect(...)。
+             */
             buf = PlatformDependent.hasUnsafe() ?
                     UnsafeByteBufUtil.newUnsafeDirectByteBuf(this, initialCapacity, maxCapacity) :
                     new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity);

@@ -22,6 +22,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.MessageToMessageEncoder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -49,6 +50,7 @@ import java.util.List;
  * </pre>
  */
 @Sharable
+@Slf4j
 public class StringEncoder extends MessageToMessageEncoder<CharSequence> {
 
     // TODO Use CharsetEncoder instead.
@@ -76,7 +78,7 @@ public class StringEncoder extends MessageToMessageEncoder<CharSequence> {
         if (msg.length() == 0) {
             return;
         }
-
+        log.info("这里对写入的内容进行一个编码，一般把我们写的数据包装为一个byteBuf，传给各个handler");
         out.add(ByteBufUtil.encodeString(ctx.alloc(), CharBuffer.wrap(msg), charset));
     }
 }

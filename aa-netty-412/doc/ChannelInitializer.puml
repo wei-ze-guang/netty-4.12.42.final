@@ -1,0 +1,70 @@
+@startuml
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+interface Channel << interface >> {
+  + parent(): Channel                     "获取父 Channel"
+  + isRegistered(): boolean              "是否注册到 EventLoop"
+  + bytesBeforeUnwritable(): long        "距离不可写还有多少字节"
+  + config(): ChannelConfig               "获取配置对象"
+  + closeFuture(): ChannelFuture          "返回关闭监听 Future"
+  + id(): ChannelId                       "Channel 唯一标识"
+  + eventLoop(): EventLoop                "获取绑定的 EventLoop"
+  + remoteAddress(): SocketAddress        "远端地址"
+  + isWritable(): boolean                 "是否可写"
+  + unsafe(): Unsafe                      "底层操作接口"
+  + alloc(): ByteBufAllocator             "获取 ByteBuf 分配器"
+  + metadata(): ChannelMetadata           "Channel 元数据"
+  + localAddress(): SocketAddress         "本地地址"
+  + isOpen(): boolean                     "是否打开"
+  + pipeline(): ChannelPipeline           "获取 pipeline"
+  + isActive(): boolean                   "是否活跃"
+  + bytesBeforeWritable(): long           "距离可写还有多少字节"
+  + flush(): Channel                      "刷新写操作"
+  + read(): Channel                        "触发读操作"
+}
+
+interface ChannelHandler << interface >> {
+  + handlerAdded(ChannelHandlerContext ctx): void  "当 handler 被加入 pipeline 时调用"
+  + handlerRemoved(ChannelHandlerContext ctx): void "当 handler 从 pipeline 移除时调用"
+  + exceptionCaught(ChannelHandlerContext ctx, Throwable cause): void
+      "处理异常，如果不处理会向下传递 (Deprecated)"
+}
+
+interface ChannelInboundHandler << interface >> {
+  + channelRegistered(ChannelHandlerContext ctx): void "Channel 注册到 EventLoop 时调用"
+  + channelUnregistered(ChannelHandlerContext ctx): void "Channel 从 EventLoop 注销时调用"
+  + channelActive(ChannelHandlerContext ctx): void "Channel 激活 (连接建立) 时调用"
+  + channelInactive(ChannelHandlerContext ctx): void "Channel 不活跃 (断开) 时调用"
+  + channelRead(ChannelHandlerContext ctx, Object msg): void "收到消息时调用"
+  + channelReadComplete(ChannelHandlerContext ctx): void "一次读循环结束后调用"
+  + channelWritabilityChanged(ChannelHandlerContext ctx): void "写状态改变时调用"
+  + userEventTriggered(ChannelHandlerContext ctx, Object evt): void "触发用户自定义事件时调用"
+  + exceptionCaught(ChannelHandlerContext ctx, Throwable cause): void "处理异常事件"
+}
+
+class ChannelInboundHandlerAdapter {
+  + channelRegistered(ChannelHandlerContext ctx): void "默认实现，向下传播事件"
+  + channelUnregistered(ChannelHandlerContext ctx): void
+  + channelActive(ChannelHandlerContext ctx): void
+  + channelInactive(ChannelHandlerContext ctx): void
+  + channelRead(ChannelHandlerContext ctx, Object msg): void
+  + channelReadComplete(ChannelHandlerContext ctx): void
+  + channelWritabilityChanged(ChannelHandlerContext ctx): void
+  + userEventTriggered(ChannelHandlerContext ctx, Object evt): void
+  + exceptionCaught(ChannelHandlerContext ctx, Throwable cause): void
+}
+
+class ChannelHandlerAdapter {
+  + handlerAdded(ChannelHandlerContext ctx): void "默认实现，标记 added=true"
+  + handlerRemoved(ChannelHandlerContext ctx): void
+  + exceptionCaught(ChannelHandlerContext ctx, Throwable cause): void
+  + isSharable(): boolean "是否可在多个 pipeline 重用"
+}
+
+ChannelHandlerAdapter         -[#008200,dashed]-^  ChannelHandler
+ChannelInboundHandler         -[#008200,plain]-^  ChannelHandler
+ChannelInboundHandlerAdapter  -[#000082,plain]-^  ChannelHandlerAdapter
+ChannelInboundHandlerAdapter  -[#008200,dashed]-^  ChannelInboundHandler
+@enduml

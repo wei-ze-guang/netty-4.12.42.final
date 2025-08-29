@@ -212,7 +212,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         @Override
         @SuppressWarnings("unchecked")
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
-            log.info("[当boss] 有新连接 ready 时，会触发 channelRead()。");
+            log.info("[当boss] 有新连接 ready 时，会触发 channelRead()。这里会创建一个channel，然后设置channel的一些属性，" +
+                    "然后把这个channel注册进worker里面");
             final Channel child = (Channel) msg;
 
             child.pipeline().addLast(childHandler);

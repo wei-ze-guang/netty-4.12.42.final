@@ -109,6 +109,7 @@ public abstract class SimpleChannelInboundHandler<I> extends ChannelInboundHandl
             }
         } finally {
             if (autoRelease && release) {
+                //  在里面他会判断是不是 需要释放的，比如普通的字符串是不释放的
                 ReferenceCountUtil.release(msg);
             }
         }

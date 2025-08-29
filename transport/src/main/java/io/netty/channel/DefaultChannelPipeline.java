@@ -26,6 +26,7 @@ import io.netty.util.internal.StringUtil;
 import io.netty.util.internal.UnstableApi;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.SocketAddress;
 import java.util.ArrayList;
@@ -43,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  * The default {@link ChannelPipeline} implementation.  It is usually created
  * by a {@link Channel} implementation when the {@link Channel} is created.
  */
+@Slf4j
 public class DefaultChannelPipeline implements ChannelPipeline {
 
     static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultChannelPipeline.class);
@@ -117,6 +119,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     private AbstractChannelHandlerContext newContext(EventExecutorGroup group, String name, ChannelHandler handler) {
+
         return new DefaultChannelHandlerContext(this, childExecutor(group), name, handler);
     }
 
@@ -158,7 +161,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         synchronized (this) {
             checkMultiplicity(handler);
             name = filterName(name, handler);
-
+            log.info("当pipeline.addLast(new MyHandler()) 时候 在这里会new一个 AbstractChannelHandlerContext ");
             newCtx = newContext(group, name, handler);
 
             addFirst0(newCtx);
@@ -200,7 +203,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
             checkMultiplicity(handler);
-
+            log.debug("[当pipeline add channelHandle 的时候 比如 addLast 这里把这个handler封装了一个 AbstractChannelHandlerContext ]");
             newCtx = newContext(group, filterName(name, handler), handler);
 
             addLast0(newCtx);
@@ -928,6 +931,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     @Override
     public final ChannelPipeline fireChannelRead(Object msg) {
+        log.info("[这里传入双向链表的head] ,这时候拿到的msg是一个byteBuf 他的hash是{}",msg.hashCode());
         AbstractChannelHandlerContext.invokeChannelRead(head, msg);
         return this;
     }
@@ -1160,6 +1164,8 @@ public class DefaultChannelPipeline implements ChannelPipeline {
      * in {@link ChannelHandler#exceptionCaught(ChannelHandlerContext, Throwable)}.
      */
     protected void onUnhandledInboundException(Throwable cause) {
+        // 一旦 Throwable 命中 ChannelPipeline 的末尾，而用户在 ChannelHandler 中未处理，就会调用。exceptionCaught
+        // （ChannelHandlerContext， Throwable） 的 ExceptionCaught。
         try {
             logger.warn(
                     "An exceptionCaught() event was fired, and it reached at the tail of the pipeline. " +
@@ -1190,6 +1196,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
      * to call {@link ReferenceCountUtil#release(Object)} on the given msg at some point.
      */
     protected void onUnhandledInboundMessage(Object msg) {
+        /**
+         * 一旦消息到达 ChannelPipeline 的末尾，而用户在 ChannelInboundHandler 中未处理，就会调用。channelRead
+         * （ChannelHandlerContext， Object） 的 ChannelRead（ChannelHandlerContext， Object）。此方法负责调用
+         * ReferenceCountUtil。release（Object） 在某个时候对给定的消息进行。
+         */
         try {
             logger.debug(
                     "Discarded inbound message {} that reached at the tail of the pipeline. " +
@@ -1205,6 +1216,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
      * to call {@link ReferenceCountUtil#release(Object)} on the given msg at some point.
      */
     protected void onUnhandledInboundMessage(ChannelHandlerContext ctx, Object msg) {
+        /**
+         * 一旦消息到达 ChannelPipeline 的末尾，而用户在 ChannelInboundHandler 中未处理，就会调用。channelRead（ChannelHandlerContext，
+         * Object） 的 ChannelRead（ChannelHandlerContext， Object）。此方法负责调用 ReferenceCountUtil。release（Object）
+         * 在某个时候对给定的消息进行。
+         */
         onUnhandledInboundMessage(msg);
         if (logger.isDebugEnabled()) {
             logger.debug("Discarded message pipeline : {}. Channel : {}.",

@@ -19,13 +19,17 @@ package io.netty.buffer;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import io.netty.util.internal.ReferenceCountUpdater;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Abstract base class for {@link ByteBuf} implementations that count references.
  */
+@Slf4j
 public abstract class AbstractReferenceCountedByteBuf extends AbstractByteBuf {
     private static final long REFCNT_FIELD_OFFSET =
             ReferenceCountUpdater.getUnsafeOffset(AbstractReferenceCountedByteBuf.class, "refCnt");
+
+    //  采用委托方式原子性操作byteBuf的引用计数
     private static final AtomicIntegerFieldUpdater<AbstractReferenceCountedByteBuf> AIF_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(AbstractReferenceCountedByteBuf.class, "refCnt");
 
@@ -43,6 +47,7 @@ public abstract class AbstractReferenceCountedByteBuf extends AbstractByteBuf {
 
     // Value might not equal "real" reference count, all access should be via the updater
     @SuppressWarnings("unused")
+    //  这里就是用用计数 ，默认设计为2 ，不是jvm内部能操作的那个
     private volatile int refCnt = updater.initialValue();
 
     protected AbstractReferenceCountedByteBuf(int maxCapacity) {
@@ -106,6 +111,7 @@ public abstract class AbstractReferenceCountedByteBuf extends AbstractByteBuf {
     }
 
     private boolean handleRelease(boolean result) {
+        log.info("当release的时候会给一个结果，是否真正释放，释放有两种，如果是堆外内存直接返还给池，如果是堆内的话");
         if (result) {
             deallocate();
         }

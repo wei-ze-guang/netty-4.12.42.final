@@ -23,6 +23,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.MessageToMessageDecoder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.Charset;
 import java.util.List;
@@ -51,6 +52,7 @@ import java.util.List;
  * }
  * </pre>
  */
+@Slf4j
 @Sharable
 public class StringDecoder extends MessageToMessageDecoder<ByteBuf> {
 
@@ -76,6 +78,7 @@ public class StringDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) throws Exception {
+        log.info("解码器被调用，这里会把byreBuf的信息转为我们想要的字符串，然后释放byteBuf");
         out.add(msg.toString(charset));
     }
 }

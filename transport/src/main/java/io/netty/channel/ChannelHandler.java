@@ -179,8 +179,10 @@ public interface ChannelHandler {
 
     /**
      * Gets called after the {@link ChannelHandler} was added to the actual context and it's ready to handle events.
+     * 比如你 pipeline.addLast(new MyHandler())，Netty 就会在 handler 初始化完成、准备处理事件时回调这个方法。
+     * 用途：做一些初始化动作，比如开定时任务、分配资源、准备缓存。
      */
-    void handlerAdded(ChannelHandlerContext ctx) throws Exception;
+    void handlerAdded(ChannelHandlerContext ctx) throws Exception;  // 测试
 
     /**
      * Gets called after the {@link ChannelHandler} was removed from the actual context and it doesn't handle events
@@ -193,6 +195,8 @@ public interface ChannelHandler {
      *
      * @deprecated if you want to handle this event you should implement {@link ChannelInboundHandler} and
      * implement the method there.
+     * 比如你 pipeline.remove(myHandler)，它就会触发。
+     * 用途：清理资源、关闭定时器、写日志。
      */
     @Deprecated
     void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception;

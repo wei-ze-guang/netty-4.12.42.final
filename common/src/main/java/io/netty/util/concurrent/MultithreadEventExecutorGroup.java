@@ -78,7 +78,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         if (executor == null) {
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
-        log.info("[一个完整的MultithreadEventExecutorGroup] 需要线程个数还有一个选择器还有一个 Executor" +
+        log.debug("[一个完整的MultithreadEventExecutorGroup] 需要线程个数还有一个选择器还有一个 Executor" +
                 "这个Executor 是用来启动EventExecutor的run的 ，因为 EventExecutor 他不能自己启动自己，最然EventExecutor" +
                 "也是一个 Executor，但是参数传入的这个 Executor  是单独的");
 

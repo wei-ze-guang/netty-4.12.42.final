@@ -22,10 +22,12 @@ import io.netty.util.ResourceLeakDetector;
 import io.netty.util.ResourceLeakTracker;
 import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.StringUtil;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Skeletal {@link ByteBufAllocator} implementation to extend.
  */
+@Slf4j
 public abstract class AbstractByteBufAllocator implements ByteBufAllocator {
     static final int DEFAULT_INITIAL_CAPACITY = 256;
     static final int DEFAULT_MAX_CAPACITY = Integer.MAX_VALUE;
@@ -111,6 +113,7 @@ public abstract class AbstractByteBufAllocator implements ByteBufAllocator {
 
     @Override
     public ByteBuf buffer(int initialCapacity) {
+        log.info("这里做了大量的判断是使用堆内内存还是对外内存，一般他会根据系统是否运行使用unsafe来判断，有的话优先使用对外内存");
         if (directByDefault) {
             return directBuffer(initialCapacity);
         }
